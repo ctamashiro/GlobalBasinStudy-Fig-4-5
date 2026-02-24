@@ -201,4 +201,4 @@ for csv_file in glob.glob(os.path.join(INPUT_FOLDER, "*.csv")):
     pd.DataFrame(records).to_csv(out, index=False)
     print(f"Saved {out}")
 
-print("✅ Monthly ET conversion (original-script-equivalent) complete.")
+print(" Monthly ET conversion (original-script-equivalent) complete.")

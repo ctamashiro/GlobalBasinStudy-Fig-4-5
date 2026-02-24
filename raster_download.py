@@ -3,9 +3,7 @@ import json
 
 ee.Initialize(project='piechota-et-research')
 
-# =====================================================
 # SETTINGS
-# =====================================================
 
 BASELINE_START = 2000
 BASELINE_END   = 2015
@@ -16,9 +14,7 @@ TARGET_MONTH = 9   # change to dry/wet month
 BASIN_NAME = "Mekong"
 GEOJSON = f"../basin_shapefiles/{BASIN_NAME}.geojson"
 
-# =====================================================
 # LOAD BASIN
-# =====================================================
 
 with open(GEOJSON) as f:
     basin_geojson = json.load(f)
@@ -26,9 +22,7 @@ with open(GEOJSON) as f:
 basin = ee.FeatureCollection(basin_geojson)
 geometry = basin.geometry()
 
-# =====================================================
 # LOAD MODIS ET (8-day → mm)
-# =====================================================
 
 et_8day = (
     ee.ImageCollection("MODIS/061/MOD16A2GF")
@@ -38,9 +32,7 @@ et_8day = (
          .copyProperties(img, ["system:time_start"]))
 )
 
-# =====================================================
 # FUNCTION: CONVERT TO MONTHLY TOTAL
-# =====================================================
 
 def monthly_sum(year, month):
     start = ee.Date.fromYMD(year, month, 1)
@@ -57,9 +49,7 @@ def monthly_sum(year, month):
     
     return monthly
 
-# =====================================================
 # BUILD FULL MONTHLY COLLECTION (2000–2015)
-# =====================================================
 
 years  = ee.List.sequence(BASELINE_START, BASELINE_END)
 months = ee.List.sequence(1, 12)
@@ -72,9 +62,8 @@ monthly_collection = ee.ImageCollection.fromImages(
     ).flatten()
 )
 
-# =====================================================
+
 # COMPUTE MONTHLY CLIMATOLOGY
-# =====================================================
 
 def climatology(month):
     return (
@@ -88,9 +77,7 @@ climatology_collection = ee.ImageCollection(
     months.map(climatology)
 )
 
-# =====================================================
 # SELECT TARGET MONTH IMAGE
-# =====================================================
 
 target = (
     monthly_collection
@@ -105,21 +92,16 @@ climo_month = (
     .first()
 )
 
-# =====================================================
 # COMPUTE ANOMALY
-# =====================================================
 
 anomaly = target.subtract(climo_month)
 
-# =====================================================
 # MASK TO BASIN
-# =====================================================
+
 
 anomaly_clipped = anomaly.clip(geometry)
 
-# =====================================================
 # EXPORT
-# =====================================================
 
 task = ee.batch.Export.image.toDrive(
     image=anomaly_clipped,
@@ -133,4 +115,4 @@ task = ee.batch.Export.image.toDrive(
 
 task.start()
 
-print("🚀 Monthly anomaly export started.")
+print(" Monthly anomaly export started.")
